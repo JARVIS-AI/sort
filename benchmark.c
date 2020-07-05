@@ -8,7 +8,10 @@
 
 #define SORT_NAME sorter
 #define SORT_TYPE int64_t
+#define MAX(x,y) (((x) > (y) ? (x) : (y)))
+#define MIN(x,y) (((x) < (y) ? (x) : (y)))
 #define SORT_CMP(x, y) ((x) - (y))
+#define SORT_CSWAP(x, y) {SORT_TYPE _sort_swap_temp = MAX((x), (y)); (x) = MIN((x),(y)); (y) = _sort_swap_temp;}
 #include "sort.h"
 
 /* Used to control the stress test */
@@ -33,8 +36,8 @@ static __inline double utime() {
 }
 
 static void fill_random(int64_t *dst, const int size) {
-  srand48(SEED);
   int i;
+  srand48(SEED);
 
   for (i = 0; i < size; i++) {
     dst[i] = lrand48();
@@ -96,7 +99,8 @@ void platform_name(char *output) {
       } \
     } \
     free(dst); \
-    printf("Benchmark%s%lld_%s\t%d\t%.1f ns/op\n", capital_word, size, platform, iter, diff * 1000.0 / (double) iter); \
+    sprintf(name_buf, "%s %lld %s", capital_word, size, platform); \
+    printf("%-40s %4d %16.1f ns/op\n", name_buf, iter, diff * 1000.0 / (double) iter); \
   } \
 } while (0)
 
@@ -119,7 +123,8 @@ void platform_name(char *output) {
       } \
     } \
     free(dst); \
-    printf("Benchmark%s%lld_%s\t%d\t%.1f ns/op\n", capital_word, size, platform, iter, diff * 1000.0 / (double) iter); \
+    sprintf(name_buf, "%s %lld %s", capital_word, size, platform); \
+    printf("%-40s %4d %16.1f ns/op\n", name_buf, iter, diff * 1000.0 / (double) iter); \
   } \
 } while (0)
 
@@ -129,6 +134,8 @@ int main(void) {
   double usec1, usec2, diff;
   char capital_word[128];
   char platform[128];
+  char name_buf[128];
+  \
   platform_name(platform);
   TEST_STDLIB(qsort);
 #if !defined(__linux__) && !defined(__CYGWIN__)
@@ -136,6 +143,7 @@ int main(void) {
   TEST_STDLIB(mergesort);
 #endif
   TEST_SORT_H(binary_insertion_sort);
+  TEST_SORT_H(bitonic_sort);
   TEST_SORT_H(quick_sort);
   TEST_SORT_H(merge_sort);
   TEST_SORT_H(heap_sort);
